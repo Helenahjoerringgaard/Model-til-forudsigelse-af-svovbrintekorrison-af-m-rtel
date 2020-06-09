@@ -1,4 +1,7 @@
-% 'g' = den forede gravitationsledning, 'tryk' = trykledningen, 'PVC' = PVC-gravitationsledningen
+%% FORKORTELSER
+% 'g' = den forede gravitationsledning 
+% 'tryk' = trykledningen 
+% 'PVC' = PVC-gravitationsledningen
 %% IMPORT AF OPHOLDSTIDER OG VANDF?RING
 opts = spreadsheetImportOptions("NumVariables", 4);
 
@@ -20,36 +23,24 @@ OpholdstiderS3 = table2array(OpholdstiderS3);
 clear opts
 
 % Tidspunkter hvor pumpen, der leder vand til trykledningen, k?rer
-pumpeaktiv_lille = OpholdstiderS3(:,5);
 pumpeaktiv_mellem = OpholdstiderS3(:,6);
-pumpeaktiv_stor = OpholdstiderS3(:,7);
 
 % Opholdstider til n?r pumpen, der leder vand til trykledningen, k?rer
-opholdstid_lille = OpholdstiderS3(:,2)*(60*60*24).*pumpeaktiv_lille; % [s]
 opholdstid_mellem = OpholdstiderS3(:,3)*(60*60*24).*pumpeaktiv_mellem; % [s]
-opholdstid_stor = OpholdstiderS3(:,4)*(60*60*24).*pumpeaktiv_stor; % [s]
 
 % Vandf?ring i l?bet af dagen i den forede ledning
 variation_byspildevand_g = OpholdstiderS3(:,8);
 flow_g_mellem = (3704.5.*variation_byspildevand_g)/10; % for?r [m3/s]
-flow_g_mellem_best = (9573.2.*variation_byspildevand_g)/10; % for?r [m3/s]
-flow_g_mellem_worst = (2655.3.*variation_byspildevand_g)/10; % for?r [m3/s]
 
 % Hvor meget vand der udledes n?r pumpen k?rer
 % Pumpekapaciteten er 12 L/s
 variation_tryk = OpholdstiderS3(:,9);
-flow_tryk_lille =  12*0.001.*pumpeaktiv_lille; % [m3/s] 
 flow_tryk_mellem =  12*0.001.*pumpeaktiv_mellem; %[m3/s]
-flow_tryk_stor = 12*0.001.*pumpeaktiv_stor; %[m3/s] 
-variation_flow_tryk = (85.*variation_tryk)/10; %[m3/s]
 %% TRYKLEDNINGEN
 % Geometriske beregninger for trykledningen
 Areal_tryk = pi*(49.94+74.16+1497.73+1591.16+506.07)*0.151 + pi*41.44*0.148; %[m2]
 Volume_tryk = ((0.151/2)^2)*pi*(49.94+74.16+1497.73+1591.16+506.07) + ((0.148/2)^2)*pi*41.44; %[m3]
 ArealVolume_tryk = Areal_tryk/Volume_tryk; %[1/m]
-
-% V?rdier for sulfiddannelsesraten i trykledninger [g S/m2*h]
-%Rate_industri = 0.1/(60*60); % industrispildevand [gS/m2*s]
 
 %Udregning af raten for sulfiddannelse. 'a' for industri med meget org.
 %stof er mellem 0,007-0,010 g S gO2 / m*h(s. 234 i SP)
@@ -97,7 +88,6 @@ vanddybde_PVC=zeros(length(flow_tryk_mellem),1);
      vanddybde_PVC(i) = 0;
      end
  end 
-% y = 0.3183098862*(3.141592654 - 1.*arccos(0.1250000000*(-25.*Q__f + sqrt(800.*Q__f*Q + 289.*Q__f^2))/Q__f))*d
 
 % Nedenst?ende er beregninger der er n?dvendige for at kunne beregne
 % geniltningskoefficienten (KLa) for PVC-gravitationsledningen
@@ -135,7 +125,7 @@ volume_total_fuld_PVC = ((pi*(Diameter_PVC/2)^2).*5.8); %[m3]
 % Volumen af gasfasen i delfyldt r?r
 volume_gasfase_delfuld_PVC = volume_total_fuld_PVC - volume_vandfase_delfuld_PVC; %[m3]
 
-% Der laves matricer
+% Der laves matricer til loopet i næste section
 areal_gasfase_delfuld_PVC_matrix = areal_gasfase_delfuld_PVC.*ones(8640,263);
 volume_gasfase_delfuld_PVC_matrix = volume_gasfase_delfuld_PVC.*ones(8640,263);
 %% PVC-GRAVITATIONSLEDNING - SULFID OXIDATION
@@ -192,7 +182,6 @@ konversionsfaktor = (1/volume_idealgas_temperatur)*32.065*10^-6;
 henrys_konstant = 1./ (0.1.*exp( 2100*(1./(temperatur+273.15) - 1./298.15) ) ) .*ones(8640,263); %[atm]
 
 % Frigivelse af H2S fra vand- til gasfase; der ganges med tidsskridtet p?
-
 H2S_frigivelse_PVC = [((KLa_h2s_PVC.*(H2S_aq_PVC - 0).*1.024^(temperatur-20)).*10).*ones(8640,2) zeros(8640,261)]; %Antages at for nedre rand er gasfasen nul ppm
 H2S_eq_PVC = zeros(8640,263);
 H2S_gasfase_PVC = zeros(8640,263);
@@ -201,6 +190,7 @@ H2S_gasfase_ppm_PVC = zeros(8640,263);
 H2S_oxidation_PVC_gm2s = zeros(8640,263);
 H2S_oxidation_PVC = zeros(8640,263);
 
+% Der er 263 kontrolvolumer fordi vandet er 10s*262s om at strømme røret 
 for i=2:8640
     for j=2:263 % F?rste kolonne er en fiktiv nedre rand
         H2S_vandfase_PVC(i,j) = H2S_vandfase_PVC(i-1,j-1) - H2S_frigivelse_PVC(i-1,j-1); %[g S/m3]
@@ -273,7 +263,7 @@ volume_total_fuld_g = ((pi*(Diameter_g/2)^2).*5); %[m3]
 % Volumen af gasfasen i delfyldt r?r
 volume_gasfase_delfuld_g = volume_total_fuld_g - volume_vandfase_delfuld_g; %[m3]
 
-% Der laves matricer
+% Der laves matricer til loopet i næste section
 areal_gasfase_delfuld_g_matrix = areal_gasfase_delfuld_g.*ones(8640,13);
 volume_gasfase_delfuld_g_matrix = volume_gasfase_delfuld_g.*ones(8640,13);
 %% DEN FOREDE LEDNING - KONCENTRATION AF SULFID
@@ -281,13 +271,10 @@ volume_gasfase_delfuld_g_matrix = volume_gasfase_delfuld_g.*ones(8640,13);
 C_byspildevand = 0.1; %[gS/m3]
 
 tid_forskydning_matrix = zeros(round(1522/max(v_delfuld_PVC)/10) ,1);
-C_PVC_tid_forskydning_bund =  C_PVC((length(C_PVC) - length(tid_forskydning_matrix)):end);
-C_PVC_tid_forskydning_top = C_PVC(1: (length(C_PVC) - length(tid_forskydning_matrix)-1 ));
 
 flow_PVC_tid_forskydning_bund = flow_tryk_mellem((length(flow_tryk_mellem) - length(tid_forskydning_matrix)):end);
 flow_PVC_tid_forskydning_top = flow_tryk_mellem(1: (length(flow_tryk_mellem) - length(tid_forskydning_matrix)-1 ));
 
-C_PVC_tid_korregeret = [C_PVC_tid_forskydning_bund; C_PVC_tid_forskydning_top];
 flow_PVC_tid_korregeret = [flow_PVC_tid_forskydning_bund; flow_PVC_tid_forskydning_top];
 
 %Samlet sulfid koncentration efter emission af svovlbrinte til gasfasen
@@ -329,9 +316,8 @@ n = 0.55*ones(8640,13);
 % Frigivelse af H2S fra vand- til gasfase; der ganges med tidsskridtet p?
 % 10 sekunder
 % Gennemsnitshastigheder der afg?r antal stedsskridt (kolonner), j: 
-% lille vandf?ring forede ledning er 0,5 m/s = 5m = 13 stedsskridt
-% middel vandf?ring forede ledning er 0,62 m/s = 6,2m = 10 stedsskridt
-% stor vandf?ring forede ledning 0,8 m/s = 8,2m = 8 stedsskridt
+% vandf?ring forede ledning er 0,52 m/s = 12 stedsskridt + nedre rand
+% Gasfasens hastighed er derfor 1/10,3 = 0,0971 af vandfasen
 
 
 H2S_gasfase = [ 0.75.*koncentration_H2S_broend.*ones(8640,2) zeros(8640,11) ] ;
@@ -371,9 +357,11 @@ end
 
 % Her laves matricer hvor nedre rand ikke er inkluderet
 H2S_roerprofil_oxidation_foraar = H2S_oxidation(:, 2:end);
+H2S_roerprofil_oxidation_foraar_gm2s = H2S_oxidation_gm2s(:, 2:end);
 H2S_roerprofil_vandfase_foraar = H2S_vandfase(:, 2:end);
 H2S_roerprofil_gas_foraar = H2S_gasfase(:, 2:end);
-H2S_roerprofil_gas_ppm_foraar = H2S_gasfase_ppm(:, 2:end);
+H2S_roerprofil_gas_ppm_foraar_rigtig = H2S_gasfase_ppm(:, 2:end);
+
 %% DEN FOREDE LEDNING - KORROSIONSRATE
 % Faktor for hvor meget af syren der reagerer med betonen; antagelse: mellem 0.3-1
 k_korrosion = 0.7; % [-] 
@@ -385,133 +373,3 @@ A = 0.8; % [g CaCO3/g beton]
 % Korrosionsrate i den forede ledning, angivet for hvert kontrolvolumen
 korrosionsrate_foraar = 11.4.*k_korrosion.*((H2S_oxidation_gm2s.*3600)./A); %[mm/?r]
 korrosionsrate_foraar_mean = mean(korrosionsrate_foraar(:,2:end))
-%korrosionsrate_foraar_mean_best = mean(korrosionsrate_foraar(:,2:end));
-%korrosionsrate_foraar_mean_worst = mean(korrosionsrate_foraar(:,2:end));
-%% VARIABLER TIL WORST/BEST-CASE SCENARIER
-nedstroems_ppm_foraar = H2S_roerprofil_gas_ppm_foraar(:,12);
-opstroems_ppm_foraar = H2S_roerprofil_gas_ppm_foraar(:,1);
-
-%nedstroems_ppm_foraar_best = H2S_roerprofil_gas_ppm_foraar(:,12);
-%opstroems_ppm_foraar_best = H2S_roerprofil_gas_ppm_foraar(:,1);
-
-%nedstroems_ppm_foraar_worst = H2S_roerprofil_gas_ppm_foraar(:,12);
-%opstroems_ppm_foraar_worst = H2S_roerprofil_gas_ppm_foraar(:,1);
-%% PLOTS
-%PLOT AF DE TRE OPHOLDSTIDER
-% figure(1)
-% plot(opholdstid_lille/(60*60));
-% hold on
-% plot(opholdstid_mellem/(60*60));
-% hold on
-% plot(opholdstid_stor/(60*60));
-% legend('15 m$^3$/d\o gn', '85 m$^3$/d\o gn', '160 m$^3$/d\o gn', 'location', 'southoutside', 'Orientation', 'horizontal', 'interpreter', 'latex')
-% xticks([0 720 1440 2160  2880  3600  4320  5040 5760 6480 7200 7920 8640])
-% xticklabels({'00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20', '22', '00'})
-% xlabel('Klokkesl\ae t', 'interpreter', 'latex')
-% ylabel('Opholdstid [time]', 'interpreter', 'latex')
-% title('Opholdstid af det udpumpede vand fra trykledningen', 'fontSize', 14, 'interpreter', 'latex')
-% hold off
-% 
-% %PLOT AF OPHOLDSTID OG SULFID KONCENTRATION
-% figure(2)
-% subplot(2,1,1)
-% plot(opholdstid_mellem/(60*60), 'color', '#3FA663')
-% title('Opholdstid af det udpumpede vand fra trykledningen', 'fontSize', 14, 'interpreter', 'latex')
-% xticks([0 720 1440 2160  2880  3600  4320  5040 5760 6480 7200 7920 8640])
-% xticklabels({'00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20', '22', '00'})
-% xlabel('Klokkesl\ae t', 'interpreter', 'latex')
-% ylabel('Opholdstid [time]', 'interpreter', 'latex')
-% 
-% subplot(2,1,2)
-% plot(C_tryk, 'color', '#D43049')
-% title('Sulfidkoncentration som funktion af opholdstid','fontSize', 14, 'interpreter', 'latex')
-% xticks([0 1 2 3 4 5])
-% xticks([0 720 1440 2160  2880  3600  4320  5040 5760 6480 7200 7920 8640])
-% xticklabels({'00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20', '22', '00'})
-% xlabel('Klokkesl\ae t', 'interpreter', 'latex')
-% ylabel('Koncentration [g S/m$^3$]', 'interpreter', 'latex')
-% %legend('Opholdstid', 'Sulfidkoncentration','location', 'southoutside', 'Orientation', 'horizontal')
-% 
-%PLOT AF SULDFIDKONCENTRATIONER SOM FUNKTION AF LEDNINGERNE
-% figure(3)
-% plot(C_tryk,'color', '#3FA663')
-% hold on
-% plot(C_PVC,'color', '#D43049')
-% hold on
-% plot(C_total,'color', '#0000e6')
-% xticks([0 720 1440 2160  2880  3600  4320  5040 5760 6480 7200 7920 8640])
-% xticklabels({'00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20', '22', '00'})
-% xlabel('Klokkesl\ae t', 'interpreter', 'latex')
-% ylabel('Koncentration [g S/m$^3$]', 'interpreter', 'latex')
-% title('Sulfidkoncentrationer igennem r\o rforl\o bet', 'fontSize', 14, 'interpreter', 'latex')
-% legend('Trykledningen', 'PVC-gravitationsledningen', 'Den forede ledning', 'location', 'southoutside', 'Orientation', 'horizontal', 'interpreter', 'latex')
-% hold off
-% 
-% %PLOT AF FLOW I FORET LEDNING OG TRYKLEDNING
-% figure(4)
-% plot(flow_g_mellem*1000, 'color', '#3FA663')
-% hold on
-% plot(flow_tryk_mellem*1000, 'color', '#D43049')
-% xticks([0 720 1440 2160  2880  3600  4320  5040 5760 6480 7200 7920 8640])
-% xticklabels({'00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20', '22', '00'})
-% xlabel('Klokkesl\ae t', 'interpreter', 'latex')
-% ylabel('Vandf\o ring [L/s]', 'interpreter', 'latex')
-% legend('Vandf\o ring i den forede ledning', 'Vandf\o ring i trykledningen', 'location', 'southoutside', 'Orientation', 'horizontal', 'interpreter', 'latex')
-% title('Vandf\o ring i ledninger', 'fontSize', 14, 'interpreter', 'latex')
-% hold off
-
-%3D plot over koncentration H2S i v?skefase, tid og r?rprofil(kontrolvolumener)
-% figure(5)
-% surf((1:12), (1:8640), H2S_roerprofil_gas_ppm_foraar, 'FaceAlpha','0.9', 'EdgeColor','none')
-% xlabel('R\o rprofil [m]', 'interpreter', 'latex')
-% ylabel('Klokkesl\ae t', 'interpreter', 'latex')
-% zlabel('Koncentration H$_{2}$S [ppm]', 'interpreter', 'latex')
-% xticks([0 2 4 6 8 10 12])
-% xticklabels({'0', '10', '20', '30', '40', '50', '60'})
-% yticks([0 720 1440 2160  2880  3600  4320  5040 5760 6480 7200 7920 8640])
-% yticklabels({'00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20', '22', '00'})
-% colormap(parula(8))
-% colorbar
-
-%PLOT OVER NEDSTR?MS OG OPSTR?MS SVOVLBRINTEKONC
-% figure(6)
-% nedstroems_ppm = H2S_roerprofil_gas_ppm_foraar(:,10);
-% opstroems_ppm = H2S_roerprofil_gas_ppm_foraar(:,1);
-% plot(nedstroems_ppm,'color', '#3FA663', 'LineWidth', 1.5)
-% hold on
-% plot(opstroems_ppm,  'color', '#D43049', 'LineWidth', 1.5)
-% legend('Nedstr\o ms','Opstr\o ms', 'location', 'southoutside', 'Orientation', 'horizontal', 'interpreter', 'latex')
-% xticks([0 720 1440 2160  2880  3600  4320  5040 5760 6480 7200 7920 8640])
-% xticklabels({'00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20', '22', '00'})
-% xlabel('Klokkesl\ae t', 'interpreter', 'latex')
-% ylabel('Koncentration H$_{2}$S [ppm]', 'interpreter', 'latex')
-% title('Forl\o b af opstr\o ms og nedstr\o ms svovlbrintekocentrationer', 'interpreter', 'latex')
-% hold off
-% 
-% KUMULERET PLOT OVER SVOVLBRINTEKONC
-
-% figure(7)
-% sortet_nedstroems = sortrows(nedstroems_ppm);
-% sortet_opstroems = sortrows(opstroems_ppm);
-% fraktil_rank =( (1:length(nedstroems_ppm))' - 0.5) /length(nedstroems_ppm);
-% plot(sortet_nedstroems,fraktil_rank, 'color',  '#D43049', 'LineWidth', 1.5)
-% hold on
-% plot(sortet_opstroems, fraktil_rank,  'color', '#3FA663', 'LineWidth', 1.5)
-% legend('Nedstr\o ms','Opstr\o ms', 'location', 'southoutside', 'Orientation', 'horizontal', 'interpreter', 'latex')
-% ylabel('Fraktion af tiden', 'interpreter', 'latex')
-% xlabel('Koncentration H$_{2}$S [ppm]', 'interpreter', 'latex')
-% axis([0 150 0 1])
-% xticks([0 25 50 75 100 125 150])
-% yticks([0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1])
-% grid on
-% hold off
-
-% Plot over variation i trykledning
-% figure(8)
-% plot(variation_flow_tryk*1000, 'color', '#3FA663', 'Linewidth' , 2)
-% xticks(0:720:8640)
-% xticklabels({'00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20', '22', '00'})
-% xlabel('Klokkesl\ae t', 'interpreter', 'latex')
-% ylabel('Vandf\o ring [L/s]', 'interpreter', 'latex')
-% axis([0 8640 0 2])
-% title('Vandf\o ring til trykledningen', 'fontSize', 14, 'interpreter', 'latex')
