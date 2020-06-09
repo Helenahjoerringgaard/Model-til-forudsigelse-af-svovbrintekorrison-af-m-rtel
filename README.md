@@ -1,4 +1,4 @@
-# Model-til-forudsigelse-af-svovbrintekorrison-af-m-rtel
+# Model til forudsigelse af svovbrintekorrison af moertel
 Modellen undersøger hvorledes en ny type mørtel med høj alkalinitet kan forlænge levetiden af betonrør. 
 Modellen beregner sulfid- og svovlbrintekoncentrationer i gas- og vandfasen, og herudfra beregnes en korrosionsrate.
 
