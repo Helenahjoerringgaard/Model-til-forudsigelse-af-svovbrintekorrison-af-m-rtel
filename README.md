@@ -7,3 +7,5 @@ Modellen beregner sulfid- og svovlbrintekoncentrationer i gas- og vandfasen, og 
 
 Excel-arket "Opholdstider" udregner opholdstider af spildevand i en trykledning, der er tilkoblet gravitationsledningen, givet ud fra en vandmængde og en antaget relativ vandføring. 
 Ønskes der at ændre i mængden af spildevand der tilledes trykledningen, skal det derfor gøres i excel-arket. 
+
+Der er ikke inkluderet kode til figurer.
