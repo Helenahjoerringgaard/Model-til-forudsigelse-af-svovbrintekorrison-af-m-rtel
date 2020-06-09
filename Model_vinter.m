@@ -125,7 +125,7 @@ volume_total_fuld_PVC = ((pi*(Diameter_PVC/2)^2).*5.8); %[m3]
 % Volumen af gasfasen i delfyldt roer
 volume_gasfase_delfuld_PVC = volume_total_fuld_PVC - volume_vandfase_delfuld_PVC; %[m3]
 
-% Der laves matricer til loopet i næste section
+% Der laves matricer til loopet i nÃ¦ste section
 areal_gasfase_delfuld_PVC_matrix = areal_gasfase_delfuld_PVC.*ones(8640,263);
 volume_gasfase_delfuld_PVC_matrix = volume_gasfase_delfuld_PVC.*ones(8640,263);
 %% PVC-GRAVITATIONSLEDNING - SULFID OXIDATION
@@ -190,7 +190,7 @@ H2S_gasfase_ppm_PVC = zeros(8640,263);
 H2S_oxidation_PVC_gm2s = zeros(8640,263);
 H2S_oxidation_PVC = zeros(8640,263);
 
-% Der er 263 kontrolvolumer fordi vandet er 10s*262s om at strømme røret 
+% Der er 263 kontrolvolumer fordi vandet er 10s*262s om at strÃ¸mme rÃ¸ret 
 for i=2:8640
     for j=2:263 % Foerste kolonne er en fiktiv nedre rand
         H2S_vandfase_PVC(i,j) = H2S_vandfase_PVC(i-1,j-1) - H2S_frigivelse_PVC(i-1,j-1); %[g S/m3]
@@ -257,14 +257,14 @@ volume_total_fuld_g = ((pi*(Diameter_g/2)^2).*5); %[m3]
 % Volumen af gasfasen i delfyldt roer
 volume_gasfase_delfuld_g = volume_total_fuld_g - volume_vandfase_delfuld_g; %[m3]
 
-% Der laves matricer til loopet i næste section
+% Der laves matricer til loopet i nÃ¦ste section
 areal_gasfase_delfuld_g_matrix = areal_gasfase_delfuld_g.*ones(8640,11);
 volume_gasfase_delfuld_g_matrix = volume_gasfase_delfuld_g.*ones(8640,11);
 %% DEN FOREDE LEDNING - KONCENTRATION AF SULFID
 % Koncentration af sulfid i husholdningsspildevand (antaget)
 C_byspildevand = 0.1; %[gS/m3]
 
-% Der justeres for at vandet er 43min om at løbe i
+% Der justeres for at vandet er 43min om at lÃ¸be i
 % PVC-gravitationsledningen
 tid_forskydning_matrix = zeros(round(1522/max(v_delfuld_PVC)/10) ,1);
 
@@ -280,7 +280,7 @@ C_PVC_ud = H2S_vandfase_PVC(:,263).*10^(pH-7.1)+H2S_vandfase_PVC(:,263);
 C_total = ((C_byspildevand.*(flow_g_mellem-flow_PVC_tid_korregeret))+(C_PVC_ud.*flow_PVC_tid_korregeret))./(flow_g_mellem);
 %% DEN FOREDE LEDNING - KONCENTRATIONER I BROENDEN 
 volume_broend = pi*0.4^(2)*3.01; %0,4 er broendens radius [m3]
-gas_i_broend = volume_broend - flow_g_mellem.*(0.8./v_delfuld_g); %0,8 er diamteren af broenden [m3] - MÅSKE GIVE NYT NAVN FOR DET ER VOULME
+gas_i_broend = volume_broend - flow_g_mellem.*(0.8./v_delfuld_g); %0,8 er diamteren af broenden [m3] - MÃ…SKE GIVE NYT NAVN FOR DET ER VOULME
 
 masse_H2S_PVC = H2S_gasfase_PVC(:,263).*volume_gasfase_delfuld_PVC; %[g S]
 koncentration_H2S_broend = masse_H2S_PVC./gas_i_broend; %[g S/m3]
@@ -321,7 +321,7 @@ H2S_gasfase_ppm = [ 0.75.*(koncentration_H2S_broend./konversionsfaktor).*ones(86
 H2S_eq = 32.065.*10.^-3.*(H2S_gasfase_ppm./henrys_konstant);
 H2S_frigivelse = ((KLa_h2s_matrix_g.*(H2S_vandfase - H2S_eq).*1.024^(temperatur-20)).*10); %Antages at for nedre rand er gasfasen nul ppm
 
-H2S_oxidation_gm2s = [( 15.52.*(0.75.*(koncentration_H2S_broend./konversionsfaktor)).^0.55).*0.001*(1/3600).*ones(8640,2) zeros(8640,9)]; %[g S/m2*s] kan vel bare være nuller, ikke?
+H2S_oxidation_gm2s = [( 15.52.*(0.75.*(koncentration_H2S_broend./konversionsfaktor)).^0.55).*0.001*(1/3600).*ones(8640,2) zeros(8640,9)]; %[g S/m2*s] kan vel bare vÃ¦re nuller, ikke?
 H2S_oxidation = zeros(8640,11);
 
 % Simulering af frigivelse af H2S og adsorption samt oxidation paa betonroerets overflade ned gennem den forede ledning
